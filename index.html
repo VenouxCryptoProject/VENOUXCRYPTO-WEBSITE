@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>VENOUX CRYPTO BOT — Smart AI Trading Assistant</title>
+<meta name="description" content="VENOUX CRYPTO BOT adalah bot Telegram berbasis AI untuk analisis Crypto, Forex, Stocks, dan Market Intelligence secara real-time.">
+<meta name="theme-color" content="#0B0B0F">
+<style>
+  :root{
+    --purple:#8B5CF6;
+    --blue:#3B82F6;
+    --black:#0B0B0F;
+    --glass:rgba(255,255,255,0.05);
+    --glass-border:rgba(255,255,255,0.1);
+    --text-dim:#9CA3AF;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--black);
+    color:#F3F4F6;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    overflow-x:hidden;
+    position:relative;
+    min-height:100vh;
+  }
+
+  /* ===== BACKGROUND ===== */
+  #bg-canvas{
+    position:fixed;
+    top:0;left:0;
+    width:100%;height:100%;
+    z-index:0;
+    background:radial-gradient(circle at 50% 0%, #1a0f2e 0%, #0B0B0F 55%, #060608 100%);
+  }
+  .bg-glow{
+    position:fixed;
+    border-radius:50%;
+    filter:blur(90px);
+    z-index:0;
+    opacity:0.35;
+    pointer-events:none;
+  }
+  .glow-1{width:480px;height:480px;background:var(--purple);top:-120px;left:-100px;}
+  .glow-2{width:420px;height:420px;background:var(--blue);bottom:-100px;right:-80px;}
+  .glow-3{width:300px;height:300px;background:var(--purple);top:40%;right:10%;opacity:0.18;}
+
+  .content{position:relative;z-index:1;}
+
+  /* ===== HEADER ===== */
+  header{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    padding:80px 20px 40px;
+  }
+  .avatar-wrap{
+    position:relative;
+    width:120px;height:120px;
+    margin-bottom:28px;
+  }
+  .avatar-ring{
+    position:absolute;
+    top:-8px;left:-8px;right:-8px;bottom:-8px;
+    border-radius:50%;
+    border:2px solid transparent;
+    background:conic-gradient(from 0deg, var(--purple), var(--blue), var(--purple));
+    animation:spin 6s linear infinite;
+    padding:2px;
+  }
+  .avatar-ring::before{
+    content:"";
+    position:absolute;
+    inset:2px;
+    border-radius:50%;
+    background:var(--black);
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .avatar{
+    position:relative;
+    width:120px;height:120px;
+    border-radius:50%;
+    background:linear-gradient(145deg,#3B1F63,#141026);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 0 30px rgba(139,92,246,0.55), 0 0 60px rgba(59,130,246,0.25);
+    animation:pulse 2.6s ease-in-out infinite;
+    z-index:2;
+  }
+  @keyframes pulse{
+    0%,100%{box-shadow:0 0 25px rgba(139,92,246,0.45), 0 0 50px rgba(59,130,246,0.2);}
+    50%{box-shadow:0 0 40px rgba(139,92,246,0.75), 0 0 75px rgba(59,130,246,0.4);}
+  }
+  .avatar svg{width:52px;height:52px;}
+
+  h1.brand{
+    font-size:clamp(28px,6vw,44px);
+    font-weight:800;
+    letter-spacing:1px;
+    background:linear-gradient(90deg,#fff 0%, var(--purple) 55%, var(--blue) 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    margin-bottom:10px;
+    animation:fadeSlideUp .8s ease both;
+  }
+  .subtitle{
+    color:var(--text-dim);
+    font-size:clamp(13px,2.4vw,16px);
+    max-width:480px;
+    line-height:1.6;
+    animation:fadeSlideUp .8s ease .1s both;
+  }
+
+  @keyframes fadeSlideUp{
+    from{opacity:0; transform:translateY(18px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+
+  /* ===== MAIN CONTAINER ===== */
+  main{
+    max-width:720px;
+    margin:0 auto;
+    padding:20px 18px 60px;
+  }
+
+  .card{
+    background:var(--glass);
+    border:1px solid var(--glass-border);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+    border-radius:24px;
+    padding:32px 28px;
+    margin-bottom:28px;
+    position:relative;
+    overflow:hidden;
+    opacity:0;
+    animation:fadeSlideUp .7s ease forwards;
+  }
+  .card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:24px;
+    padding:1px;
+    background:linear-gradient(135deg, rgba(139,92,246,0.5), transparent 40%, transparent 60%, rgba(59,130,246,0.5));
+    -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite:xor;
+    mask-composite:exclude;
+    pointer-events:none;
+    opacity:0.6;
+  }
+  .card h2{
+    font-size:20px;
+    font-weight:700;
+    margin-bottom:14px;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .card h2::before{
+    content:"";
+    width:6px;height:18px;
+    border-radius:3px;
+    background:linear-gradient(180deg,var(--purple),var(--blue));
+    display:inline-block;
+  }
+  .about-text{
+    color:#D1D5DB;
+    font-size:14.5px;
+    line-height:1.75;
+  }
+
+  /* ===== FEATURE LIST ===== */
+  .features{
+    list-style:none;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-top:20px;
+  }
+  .features li{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:13.5px;
+    color:#E5E7EB;
+    background:rgba(255,255,255,0.03);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:12px;
+    padding:10px 12px;
+    transition:transform .25s ease, border-color .25s ease, background .25s ease;
+  }
+  .features li:hover{
+    transform:scale(1.03);
+    border-color:rgba(139,92,246,0.5);
+    background:rgba(139,92,246,0.08);
+  }
+  .features li .tick{
+    flex-shrink:0;
+    width:22px;height:22px;
+    border-radius:50%;
+    background:linear-gradient(135deg,var(--purple),var(--blue));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    color:#fff;
+    box-shadow:0 0 10px rgba(139,92,246,0.5);
+  }
+
+  /* ===== STATS ===== */
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+    text-align:center;
+  }
+  .stat-box{
+    padding:16px 6px;
+    border-radius:16px;
+    background:rgba(255,255,255,0.03);
+    border:1px solid rgba(255,255,255,0.07);
+  }
+  .stat-num{
+    font-size:clamp(16px,4vw,22px);
+    font-weight:800;
+    background:linear-gradient(90deg,var(--purple),var(--blue));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    display:block;
+    margin-bottom:4px;
+  }
+  .stat-label{
+    font-size:11px;
+    color:var(--text-dim);
+    letter-spacing:0.3px;
+  }
+
+  /* ===== CTA BUTTON ===== */
+  .cta-wrap{
+    display:flex;
+    justify-content:center;
+    margin-top:8px;
+  }
+  .cta-btn{
+    position:relative;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    width:100%;
+    max-width:420px;
+    padding:16px 24px;
+    border:none;
+    border-radius:16px;
+    background:linear-gradient(90deg,var(--purple),var(--blue));
+    color:#fff;
+    font-size:16px;
+    font-weight:700;
+    letter-spacing:0.3px;
+    cursor:pointer;
+    text-decoration:none;
+    box-shadow:0 0 25px rgba(139,92,246,0.45);
+    transition:transform .2s ease, box-shadow .2s ease;
+  }
+  .cta-btn:hover{
+    transform:translateY(-2px) scale(1.02);
+    box-shadow:0 0 40px rgba(139,92,246,0.65), 0 0 50px rgba(59,130,246,0.35);
+  }
+  .cta-btn:active{transform:translateY(0) scale(0.99);}
+  .cta-btn svg{width:22px;height:22px;flex-shrink:0;}
+  .ripple{
+    position:absolute;
+    border-radius:50%;
+    background:rgba(255,255,255,0.5);
+    transform:scale(0);
+    animation:rippleAnim .6s linear;
+    pointer-events:none;
+  }
+  @keyframes rippleAnim{
+    to{transform:scale(4); opacity:0;}
+  }
+
+  /* ===== FOOTER ===== */
+  footer{
+    text-align:center;
+    padding:30px 20px 50px;
+    color:var(--text-dim);
+    font-size:12.5px;
+    line-height:1.8;
+  }
+  footer .foot-glow{
+    width:60px;height:2px;
+    margin:0 auto 16px;
+    background:linear-gradient(90deg,var(--purple),var(--blue));
+    border-radius:2px;
+    opacity:0.6;
+  }
+
+  /* ===== FLOAT ICONS ===== */
+  .float-icon{
+    position:absolute;
+    opacity:0.25;
+    pointer-events:none;
+    animation:floaty 6s ease-in-out infinite;
+  }
+  @keyframes floaty{
+    0%,100%{transform:translateY(0) rotate(0deg);}
+    50%{transform:translateY(-14px) rotate(8deg);}
+  }
+
+  @media (max-width:480px){
+    .features{grid-template-columns:1fr;}
+    .stats{grid-template-columns:repeat(2,1fr);}
+    .card{padding:26px 20px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; animation-iteration-count:1 !important;}
+    html{scroll-behavior:auto;}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="bg-glow glow-1"></div>
+<div class="bg-glow glow-2"></div>
+<div class="bg-glow glow-3"></div>
+
+<div class="content">
+
+  <header>
+    <div class="avatar-wrap">
+      <div class="avatar-ring"></div>
+      <div class="avatar">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#C4B5FD" stroke-width="1.4" stroke-linejoin="round"/>
+          <path d="M2 17L12 22L22 17" stroke="#93C5FD" stroke-width="1.4" stroke-linejoin="round"/>
+          <path d="M2 12L12 17L22 12" stroke="#93C5FD" stroke-width="1.4" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+    <h1 class="brand">VENOUX CRYPTO BOT</h1>
+    <p class="subtitle">Smart AI Trading • Crypto • Forex • Stocks • Market Intelligence</p>
+  </header>
+
+  <main>
+
+    <section class="card" style="animation-delay:.05s">
+      <h2>Tentang Bot</h2>
+      <p class="about-text">
+        VENOUX CRYPTO BOT adalah bot Telegram berbasis AI yang dirancang untuk membantu trader dan investor dengan analisis pasar modern, cepat, dan akurat — mencakup crypto, forex, saham, hingga meme coin dalam satu platform cerdas.
+      </p>
+
+      <ul class="features">
+        <li><span class="tick">✓</span> AI Trading Analysis</li>
+        <li><span class="tick">✓</span> Crypto Market Scanner</li>
+        <li><span class="tick">✓</span> Forex Signal</li>
+        <li><span class="tick">✓</span> Stock Analysis</li>
+        <li><span class="tick">✓</span> Whale Wallet Tracking</li>
+        <li><span class="tick">✓</span> Meme Coin Analysis</li>
+        <li><span class="tick">✓</span> Risk Management</li>
+        <li><span class="tick">✓</span> Portfolio Management</li>
+        <li><span class="tick">✓</span> AI Market Prediction</li>
+        <li><span class="tick">✓</span> News Intelligence</li>
+        <li><span class="tick">✓</span> Real Time Alert</li>
+        <li><span class="tick">✓</span> Multi Asset Support</li>
+      </ul>
+    </section>
+
+    <section class="card" style="animation-delay:.15s">
+      <h2>Statistik</h2>
+      <div class="stats">
+        <div class="stat-box">
+          <span class="stat-num" data-target="0">0</span>
+          <span class="stat-label">Users</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-num" data-static="24/7">24/7</span>
+          <span class="stat-label">Online</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-num" data-target="99.9" data-decimal="1" data-suffix="%">0%</span>
+          <span class="stat-label">Uptime</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-num" data-static="AI">AI</span>
+          <span class="stat-label">Powered</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="cta-wrap">
+      <a href="http://t.me/VenouxCryptoBot" target="_blank" rel="noopener" class="cta-btn" id="ctaBtn">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.94 4.6c.24-1.03-.68-1.86-1.65-1.5L2.4 10.13c-1.02.4-1.02 1.87.02 2.24l4.55 1.6 1.76 5.7c.24.78 1.2 1.02 1.8.46l2.55-2.4 4.5 3.3c.7.52 1.72.14 1.9-.72L21.94 4.6zM8.3 13.1l9.2-6.03c.28-.18.55.16.3.38l-7.6 6.9-.3 3.3-1.36-4.1z"/></svg>
+        Open Telegram Bot
+      </a>
+    </div>
+
+  </main>
+
+  <footer>
+    <div class="foot-glow"></div>
+    © 2026 VENOUX CRYPTO BOT<br>
+    Powered by AI Technology
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ===== STAR + PARTICLE BACKGROUND (single lightweight canvas) ===== */
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  let w, h, dpr;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function resize(){
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = window.innerWidth;
+    h = window.innerHeight;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Stars
+  const STAR_COUNT = Math.min(90, Math.floor(w/14));
+  const stars = Array.from({length: STAR_COUNT}, () => ({
+    x: Math.random()*w,
+    y: Math.random()*h,
+    r: Math.random()*1.3 + 0.3,
+    speed: Math.random()*0.15 + 0.03,
+    alpha: Math.random()*0.6 + 0.3,
+    twinkle: Math.random()*Math.PI*2
+  }));
+
+  // Particles
+  const PARTICLE_COUNT = Math.min(36, Math.floor(w/28));
+  const colors = ['139,92,246','59,130,246'];
+  const particles = Array.from({length: PARTICLE_COUNT}, () => ({
+    x: Math.random()*w,
+    y: Math.random()*h,
+    r: Math.random()*2 + 0.8,
+    vx: (Math.random()-0.5)*0.25,
+    vy: (Math.random()-0.5)*0.25,
+    color: colors[Math.floor(Math.random()*colors.length)],
+    alpha: Math.random()*0.4 + 0.15
+  }));
+
+  // Neon lines
+  const LINE_COUNT = 3;
+  const lines = Array.from({length: LINE_COUNT}, (_, i) => ({
+    offset: Math.random()*1000,
+    speed: 0.15 + i*0.05,
+    y: (h/(LINE_COUNT+1)) * (i+1),
+    color: i % 2 === 0 ? '139,92,246' : '59,130,246'
+  }));
+
+  let t = 0;
+
+  function draw(){
+    ctx.clearRect(0,0,w,h);
+
+    // neon flowing lines
+    lines.forEach(line => {
+      ctx.beginPath();
+      ctx.strokeStyle = `rgba(${line.color},0.12)`;
+      ctx.lineWidth = 1;
+      for(let x=0; x<=w; x+=20){
+        const y = line.y + Math.sin((x*0.01) + t*line.speed + line.offset) * 22;
+        if(x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+    });
+
+    // stars
+    stars.forEach(s => {
+      s.y += s.speed;
+      if(s.y > h) s.y = 0;
+      const tw = 0.5 + 0.5*Math.sin(t*0.05 + s.twinkle);
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(255,255,255,${s.alpha*tw})`;
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fill();
+    });
+
+    // particles
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      if(p.x < 0) p.x = w; if(p.x > w) p.x = 0;
+      if(p.y < 0) p.y = h; if(p.y > h) p.y = 0;
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(${p.color},${p.alpha})`;
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fill();
+    });
+
+    t += 1;
+    if(!reduceMotion){
+      requestAnimationFrame(draw);
+    }
+  }
+  draw();
+
+  /* ===== SCROLL FADE-IN FOR CARDS ===== */
+  const cards = document.querySelectorAll('.card');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        entry.target.style.animationPlayState = 'running';
+        observer.unobserve(entry.target);
+      }
+    });
+  }, {threshold:0.15});
+  cards.forEach(c => observer.observe(c));
+
+  /* ===== COUNTER ANIMATION FOR STATS ===== */
+  const statNums = document.querySelectorAll('.stat-num[data-target]');
+  let countersStarted = false;
+
+  function animateCounters(){
+    if(countersStarted) return;
+    countersStarted = true;
+    statNums.forEach(el => {
+      const target = parseFloat(el.getAttribute('data-target'));
+      const decimals = parseInt(el.getAttribute('data-decimal') || '0', 10);
+      const suffix = el.getAttribute('data-suffix') || '';
+      const duration = 1400;
+      const start = performance.now();
+
+      function tick(now){
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const value = target * eased;
+        el.textContent = value.toFixed(decimals) + suffix;
+        if(progress < 1){
+          requestAnimationFrame(tick);
+        } else {
+          el.textContent = target.toFixed(decimals) + suffix;
+        }
+      }
+      requestAnimationFrame(tick);
+    });
+  }
+
+  const statsSection = document.querySelector('.stats');
+  if(statsSection){
+    const statsObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if(entry.isIntersecting){
+          animateCounters();
+          statsObserver.disconnect();
+        }
+      });
+    }, {threshold:0.3});
+    statsObserver.observe(statsSection);
+  }
+
+  /* ===== RIPPLE EFFECT ON CTA BUTTON ===== */
+  const ctaBtn = document.getElementById('ctaBtn');
+  ctaBtn.addEventListener('click', function(e){
+    const rect = ctaBtn.getBoundingClientRect();
+    const ripple = document.createElement('span');
+    const size = Math.max(rect.width, rect.height);
+    ripple.className = 'ripple';
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = (e.clientX - rect.left - size/2) + 'px';
+    ripple.style.top = (e.clientY - rect.top - size/2) + 'px';
+    ctaBtn.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 650);
+  });
+
+})();
+</script>
+
+</body>
+</html>
